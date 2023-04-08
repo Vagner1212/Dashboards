@@ -1,0 +1,57 @@
+from dash import Dash, html, dcc, Input, Output
+import plotly.express as px
+import pandas as pd
+
+app = Dash(__name__)
+
+df = pd.read_excel("Vendas.xlsx")
+
+fig = px.bar(df, x="Produto", y="Quantidade", color="ID Loja", barmode="group")
+opcoes = list(df['ID Loja'].unique())
+opcoes.append("Todas")
+
+app.layout = html.Div(
+    children=[
+        html.H1(
+            children='Faturamento de Lojas',
+            style={'background-color': '#16003B', 'color': '#efe2bf', 'padding': '10px'}
+        ),
+        html.H2(
+            children='Gráfico com o faturamento de todos os produtos separados por loja',
+            style={'background-color': '#16003B', 'color': '#efe2bf', 'padding': '10px'}
+        ),
+        html.Div(
+            children='''Obs: Esse gráfico mostra a quantidade de produtos vendidos, não o faturamento.''',
+            style={'background-color': '##16003B', 'color': '#efe2bf', 'padding': '10px'}
+        ),
+        dcc.Dropdown(opcoes, value='Todas as Lojas', id='Lista Loja', style={'background-color': '#efe2bf', 'color': '#3c096c'}),
+
+        html.Div(id='texto', style={'background-color': '#16003B', 'color': '#efe2bf', 'padding': '10px'}),
+
+        dcc.Graph(
+            id='grafico_quantidade_vendas',
+            figure=fig,
+            style={'black': '100%', 'height': '700px'}
+        ),
+    ],
+    style={'background-color': '#16003B', 'padding': '20px'}
+)
+
+@app.callback(
+    Output('grafico_quantidade_vendas', 'figure'),
+    Input('Lista Loja','value')
+
+)
+def update_output_div(value):
+    if value == "Todas as Lojas":
+        fig = px.bar(df, x="Produto", y="Quantidade", color="ID Loja", barmode="group")
+    else:
+        tabela_filtrada = df.loc[df['ID Loja']==value, :]
+        fig = px.bar(tabela_filtrada, x="Produto", y="Quantidade", color="ID Loja", barmode="group")
+    return  fig
+
+
+
+
+app.run_server(debug=True)
+
